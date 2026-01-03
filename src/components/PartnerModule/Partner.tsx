@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
+import { useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import PartnerSidebar from "./PartnerSidebar";
 import { FaBars } from "react-icons/fa";
@@ -8,7 +8,7 @@ export type PartnerTab = "dashboard" | "analytics" | "salary" | "service" | "sub
 const cn = (...a: Array<string | false | undefined | null>) => a.filter(Boolean).join(" ");
 
 /* ✅ Lazy loaded sections (must exist as default exports) */
-// const PartnerDashboardHome = lazy(() => import("./PartnerDashboardHome"));
+const PartnerDashboard = lazy(() => import("./PartnerDashboard"));
 const PartnerAnalytics = lazy(() => import("./PartnerAnalytics"));
 const PartnerSalaryPayment = lazy(() => import("./PartnerSalaryPayment"));
 const PartnerServiceAccess = lazy(() => import("./PartnerServiceAccess"));
@@ -29,7 +29,7 @@ const pathToTab = (path: string): PartnerTab => {
   if (path.startsWith("/partner/salary")) return "salary";
   if (path.startsWith("/partner/service")) return "service";
   if (path.startsWith("/partner/subscription")) return "subscription";
-//   return "dashboard";
+  return "dashboard";
 };
 
 export default function Partner() {
@@ -126,3 +126,8 @@ export default function Partner() {
     </div>
   );
 }
+
+
+
+
+
