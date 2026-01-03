@@ -46,7 +46,7 @@ export default function PartnerSidebar({
   panelTitle = "Partner Panel",
 }: {
   active: PartnerTab;
-  setActive: React.Dispatch<React.SetStateAction<PartnerTab>>;
+setActive: (t: PartnerTab) => void;
   sidebarOpen: boolean;
   setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
   panelTitle?: string;
