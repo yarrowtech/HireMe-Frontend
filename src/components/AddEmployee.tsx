@@ -1,4 +1,10 @@
-import { useRef, useState, type ChangeEvent } from "react";
+import {
+  useRef,
+  useState,
+  type ChangeEvent,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { toast } from "react-toastify";
 import {
   FaUser,
@@ -11,10 +17,10 @@ import {
   FaTimes,
 } from "react-icons/fa";
 
+type SubFormState = "details" | "documents" | "education" | "bank" | "job";
+
 export default function AddEmployee() {
-  const [subFormState, setSubFormState] = useState<
-    "details" | "documents" | "education" | "bank" | "job"
-  >("details");
+  const [subFormState, setSubFormState] = useState<SubFormState>("details");
 
   const [personalDetails, setPersonalDetails] = useState<{
     firstname: string;
@@ -96,11 +102,10 @@ export default function AddEmployee() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  /* ✅ FIX 1: make ref nullable */
+  /* ✅ confirm ref nullable */
   const confirmAccountNumberRef = useRef<HTMLInputElement | null>(null);
 
-  // Form steps configuration
-  const steps = [
+  const steps: Array<{ id: SubFormState; label: string; icon: any }> = [
     { id: "details", label: "Personal Details", icon: FaUser },
     { id: "documents", label: "Documents", icon: FaFileAlt },
     { id: "education", label: "Education", icon: FaGraduationCap },
@@ -108,10 +113,9 @@ export default function AddEmployee() {
     { id: "job", label: "Job Specifications", icon: FaBriefcase },
   ];
 
-  const currentStepIndex = steps.findIndex((step) => step.id === subFormState);
+  const currentStepIndex = steps.findIndex((s) => s.id === subFormState);
   const isLastStep = currentStepIndex === steps.length - 1;
 
-  // Reset form function
   function resetForm() {
     setPersonalDetails({
       firstname: "",
@@ -155,35 +159,7 @@ export default function AddEmployee() {
     setSubFormState("details");
   }
 
-  // Check if current step is completed
-  function isCurrentStepValid() {
-    return validateStep(subFormState) === null;
-  }
-
-  // Handle next step
-  function handleNextStep() {
-    const error = validateStep(subFormState);
-    if (error) {
-      toast.error(error);
-      return;
-    }
-
-    if (currentStepIndex < steps.length - 1) {
-      const nextStep = steps[currentStepIndex + 1];
-      setSubFormState(nextStep.id as typeof subFormState);
-    }
-  }
-
-  // Handle previous step
-  function handlePreviousStep() {
-    if (currentStepIndex > 0) {
-      const prevStep = steps[currentStepIndex - 1];
-      setSubFormState(prevStep.id as typeof subFormState);
-    }
-  }
-
-  // Validation function for a specific step
-  function validateStep(step: string) {
+  function validateStep(step: SubFormState) {
     switch (step) {
       case "details":
         if (!personalDetails.firstname.trim()) return "First name is required";
@@ -229,7 +205,8 @@ export default function AddEmployee() {
         if (!bankDetails.accountType) return "Account type is required";
         if (
           confirmAccountNumberRef.current &&
-          bankDetails.accountNumber !== confirmAccountNumberRef.current.value.trim()
+          bankDetails.accountNumber !==
+            confirmAccountNumberRef.current.value.trim()
         )
           return "Account number and confirm account number do not match";
         return null;
@@ -249,11 +226,30 @@ export default function AddEmployee() {
     }
   }
 
-  // Form submission handler
+  function isCurrentStepValid() {
+    return validateStep(subFormState) === null;
+  }
+
+  function handleNextStep() {
+    const error = validateStep(subFormState);
+    if (error) return toast.error(error);
+
+    if (currentStepIndex < steps.length - 1) {
+      const next = steps[currentStepIndex + 1];
+      setSubFormState(next.id);
+    }
+  }
+
+  function handlePreviousStep() {
+    if (currentStepIndex > 0) {
+      const prev = steps[currentStepIndex - 1];
+      setSubFormState(prev.id);
+    }
+  }
+
   async function handleSubmit() {
     setIsSubmitting(true);
 
-    // Validate all steps before submission
     const errors: string[] = [];
     for (const step of steps) {
       const error = validateStep(step.id);
@@ -261,13 +257,12 @@ export default function AddEmployee() {
     }
 
     if (errors.length > 0) {
-      toast.error(errors[0]); // Show first error
+      toast.error(errors[0]);
       setIsSubmitting(false);
       return;
     }
 
     const formData = new FormData();
-
     formData.append(
       "Name",
       `${personalDetails.firstname} ${personalDetails.middlename} ${personalDetails.lastname}`.trim()
@@ -311,13 +306,13 @@ export default function AddEmployee() {
         `${import.meta.env.VITE_API_URL}/employee/add-employee`,
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
           body: formData,
         }
       );
+
       const data = await res.json();
+
       if (res.ok) {
         toast.success("Employee added successfully!");
         resetForm();
@@ -328,7 +323,7 @@ export default function AddEmployee() {
             : data.message || "Failed to add employee"
         );
       }
-    } catch (err) {
+    } catch {
       toast.error("An error occurred while submitting the employee.");
     } finally {
       setIsSubmitting(false);
@@ -360,16 +355,14 @@ export default function AddEmployee() {
             const isCurrent = index === currentStepIndex;
             const isAccessible = index <= currentStepIndex;
 
+            const StepIcon = step.icon;
+
             return (
               <div key={step.id} className="flex items-center">
                 <div className="flex flex-col items-center">
                   <button
                     type="button"
-                    onClick={() =>
-                      isAccessible
-                        ? setSubFormState(step.id as typeof subFormState)
-                        : null
-                    }
+                    onClick={() => (isAccessible ? setSubFormState(step.id) : null)}
                     disabled={!isAccessible}
                     className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-200 ${
                       isCompleted
@@ -381,8 +374,9 @@ export default function AddEmployee() {
                         : "bg-gray-200 text-gray-400 cursor-not-allowed"
                     }`}
                   >
-                    {isCompleted ? "✓" : <step.icon />}
+                    {isCompleted ? "✓" : <StepIcon />}
                   </button>
+
                   <span
                     className={`text-xs font-medium mt-2 hidden sm:block ${
                       isCompleted
@@ -397,12 +391,13 @@ export default function AddEmployee() {
                     {step.label}
                   </span>
                 </div>
+
                 {index < steps.length - 1 && (
                   <div
                     className={`w-8 h-px mx-2 hidden sm:block ${
                       isCompleted ? "bg-green-300" : "bg-blue-200"
                     }`}
-                  ></div>
+                  />
                 )}
               </div>
             );
@@ -419,18 +414,21 @@ export default function AddEmployee() {
               setPersonalDetails={setPersonalDetails}
             />
           )}
+
           {subFormState === "documents" && (
             <Documents
               documentFiles={documentFiles}
               setDocumentFiles={setDocumentFiles}
             />
           )}
+
           {subFormState === "education" && (
             <Education
               educationDetails={educationDetails}
               setEducationDetails={setEducationDetails}
             />
           )}
+
           {subFormState === "bank" && (
             <Bank
               bankDetails={bankDetails}
@@ -438,17 +436,14 @@ export default function AddEmployee() {
               confirmAccountNumberRef={confirmAccountNumberRef}
             />
           )}
+
           {subFormState === "job" && (
-            <JobSpecifications
-              jobDetails={jobDetails}
-              setJobDetails={setJobDetails}
-            />
+            <JobSpecifications jobDetails={jobDetails} setJobDetails={setJobDetails} />
           )}
         </div>
 
         {/* Navigation Buttons */}
         <div className="flex justify-between">
-          {/* Previous Button */}
           <button
             type="button"
             onClick={handlePreviousStep}
@@ -462,7 +457,6 @@ export default function AddEmployee() {
             ← Previous
           </button>
 
-          {/* Next/Submit Button */}
           {isLastStep ? (
             <button
               type="button"
@@ -472,13 +466,11 @@ export default function AddEmployee() {
             >
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                   Adding Employee...
                 </>
               ) : (
-                <>
-                  Add Employee ✓
-                </>
+                <>Add Employee ✓</>
               )}
             </button>
           ) : (
@@ -501,6 +493,8 @@ export default function AddEmployee() {
   );
 }
 
+/* ------------------------- Sub Components ------------------------- */
+
 function PersonalDetails({
   personalDetails,
   setPersonalDetails,
@@ -515,8 +509,8 @@ function PersonalDetails({
     address: string;
     pic: File | null;
   };
-  setPersonalDetails: React.Dispatch<
-    React.SetStateAction<{
+  setPersonalDetails: Dispatch<
+    SetStateAction<{
       firstname: string;
       middlename: string;
       lastname: string;
@@ -534,13 +528,10 @@ function PersonalDetails({
   );
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setPersonalDetails((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setPersonalDetails((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -635,10 +626,7 @@ function PersonalDetails({
               const file = employeePicUploader.current?.files?.[0];
               if (!file) return;
               setEmployeePic(URL.createObjectURL(file));
-              setPersonalDetails((prev) => ({
-                ...prev,
-                pic: file,
-              }));
+              setPersonalDetails((prev) => ({ ...prev, pic: file }));
             }}
           />
           <button
@@ -649,6 +637,7 @@ function PersonalDetails({
             <FaUpload />
             Upload Photo
           </button>
+
           {employeePic && (
             <div className="flex items-center gap-3">
               <img
@@ -660,10 +649,7 @@ function PersonalDetails({
                 type="button"
                 onClick={() => {
                   setEmployeePic(null);
-                  setPersonalDetails((prev) => ({
-                    ...prev,
-                    pic: null,
-                  }));
+                  setPersonalDetails((prev) => ({ ...prev, pic: null }));
                 }}
                 className="text-red-600 hover:text-red-800 transition-colors"
               >
@@ -688,8 +674,8 @@ function Documents({
     pan: File | null;
     voter: File | null;
   };
-  setDocumentFiles: React.Dispatch<
-    React.SetStateAction<{
+  setDocumentFiles: Dispatch<
+    SetStateAction<{
       aadhaarNo: string;
       panNo: string;
       aadhaar: File | null;
@@ -706,24 +692,22 @@ function Documents({
   const [panPreview, setPanPreview] = useState<string>();
   const [voterPreview, setVoterPreview] = useState<string>();
 
-  const handleFileChange = (e: ChangeEvent, fileType: string) => {
+  const handleFileChange = (e: ChangeEvent, fileType: "aadhaar" | "pan" | "voter") => {
     const file = (e.currentTarget as HTMLInputElement).files?.[0];
     if (!file) return;
 
     const url = URL.createObjectURL(file);
+
     if (fileType === "aadhaar") setAadhaarPreview(url);
-    else if (fileType === "pan") setPanPreview(url);
-    else setVoterPreview(url);
+    if (fileType === "pan") setPanPreview(url);
+    if (fileType === "voter") setVoterPreview(url);
 
     setDocumentFiles((prev) => ({ ...prev, [fileType]: file }));
   };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setDocumentFiles((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setDocumentFiles((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -802,10 +786,7 @@ function DocumentSection({
   numberPlaceholder: string;
   numberValue: string;
   onNumberChange: (e: ChangeEvent<HTMLInputElement>) => void;
-
-  /* ✅ FIX 2: nullable ref type */
   fileRef: React.RefObject<HTMLInputElement | null>;
-
   onFileChange: (e: ChangeEvent) => void;
   file: File | null;
   preview?: string;
@@ -819,6 +800,11 @@ function DocumentSection({
 
       {showNumberInput && (
         <div className="mb-3">
+          {numberLabel && (
+            <label className="block text-blue-700 font-medium mb-2">
+              {numberLabel} {required && <span className="text-red-500">*</span>}
+            </label>
+          )}
           <input
             type="text"
             name={numberName}
@@ -839,6 +825,7 @@ function DocumentSection({
           onChange={onFileChange}
           className="hidden"
         />
+
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
@@ -851,6 +838,7 @@ function DocumentSection({
         {file && (
           <div className="flex items-center gap-3">
             <span className="text-sm text-green-700 font-medium">✓ {file.name}</span>
+
             {preview && (
               <a
                 href={preview}
@@ -861,6 +849,7 @@ function DocumentSection({
                 <FaEye />
               </a>
             )}
+
             <button
               type="button"
               onClick={onClear}
@@ -886,8 +875,8 @@ function Education({
     percentage: number;
     marksheet: File | null;
   };
-  setEducationDetails: React.Dispatch<
-    React.SetStateAction<{
+  setEducationDetails: Dispatch<
+    SetStateAction<{
       qualification: string;
       institute: string;
       yearOfPassing: string;
@@ -899,7 +888,7 @@ function Education({
   const marksheetRef = useRef<HTMLInputElement | null>(null);
   const [marksheetPreview, setMarksheetPreview] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setEducationDetails((prev) => ({
       ...prev,
@@ -909,13 +898,9 @@ function Education({
 
   const handleFileChange = (e: ChangeEvent) => {
     const file = (e.currentTarget as HTMLInputElement).files?.[0];
-    if (file) {
-      setMarksheetPreview(URL.createObjectURL(file));
-      setEducationDetails((prev) => ({
-        ...prev,
-        marksheet: file,
-      }));
-    }
+    if (!file) return;
+    setMarksheetPreview(URL.createObjectURL(file));
+    setEducationDetails((prev) => ({ ...prev, marksheet: file }));
   };
 
   return (
@@ -985,6 +970,7 @@ function Education({
             <FaUpload />
             Upload Marksheet
           </button>
+
           {educationDetails.marksheet && (
             <div className="flex items-center gap-3">
               <span className="text-sm text-green-700 font-medium">
@@ -1031,8 +1017,8 @@ function Bank({
     branchName: string;
     accountType: string;
   };
-  setBankDetails: React.Dispatch<
-    React.SetStateAction<{
+  setBankDetails: Dispatch<
+    SetStateAction<{
       accountHolderName: string;
       bankName: string;
       accountNumber: string;
@@ -1043,14 +1029,9 @@ function Bank({
   >;
   confirmAccountNumberRef: React.RefObject<HTMLInputElement | null>;
 }) {
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setBankDetails((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setBankDetails((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -1088,8 +1069,11 @@ function Bank({
           onChange={handleChange}
           required
         />
+
         <div>
-          <label className="block text-blue-700 font-medium mb-2">Confirm Account Number</label>
+          <label className="block text-blue-700 font-medium mb-2">
+            Confirm Account Number
+          </label>
           <input
             type="text"
             name="confirmAccountNumber"
@@ -1099,6 +1083,7 @@ function Bank({
             required
           />
         </div>
+
         <FormField
           label="IFSC Code"
           name="ifscCode"
@@ -1149,8 +1134,8 @@ function JobSpecifications({
     joiningDate: string;
     accessLevel: string;
   };
-  setJobDetails: React.Dispatch<
-    React.SetStateAction<{
+  setJobDetails: Dispatch<
+    SetStateAction<{
       post: string;
       amount: number;
       paymentFrequency: string;
@@ -1159,9 +1144,7 @@ function JobSpecifications({
     }>
   >;
 }) {
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setJobDetails((prev) => ({
       ...prev,
@@ -1204,8 +1187,11 @@ function JobSpecifications({
           min="0"
           required
         />
+
         <div>
-          <label className="block text-blue-700 font-medium mb-2">Payment Frequency</label>
+          <label className="block text-blue-700 font-medium mb-2">
+            Payment Frequency
+          </label>
           <select
             name="paymentFrequency"
             value={jobDetails.paymentFrequency}
@@ -1257,7 +1243,7 @@ function FormField({
   type?: string;
   placeholder?: string;
   value: string | number;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
   required?: boolean;
   min?: string;
   max?: string;
