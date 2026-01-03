@@ -1,157 +1,18 @@
-// import { useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
-// import { useLocation, useNavigate } from "react-router-dom";
-// import PartnerSidebar from "./PartnerSidebar";
-// import { FaBars } from "react-icons/fa";
-
-// export type PartnerTab = "dashboard" | "analytics" | "salary" | "service" | "subscription";
-
-// const cn = (...a: Array<string | false | undefined | null>) => a.filter(Boolean).join(" ");
-
-// /* ✅ Lazy loaded sections (must exist as default exports) */
-// const PartnerDashboard = lazy(() => import("./PartnerDashboard"));
-// const PartnerAnalytics = lazy(() => import("./PartnerAnalytics"));
-// const PartnerSalaryPayment = lazy(() => import("./PartnerSalaryPayment"));
-// const PartnerServiceAccess = lazy(() => import("./PartnerServiceAccess"));
-//  const PartnerSubscription = lazy(() => import("./PartnerSubscription"));
-
-// /* tab -> path */
-// const TAB_TO_PATH: Record<PartnerTab, string> = {
-//   dashboard: "/partner/dashboard",
-//   analytics: "/partner/analytics",
-//   salary: "/partner/salary",
-//   service: "/partner/service",
-//   subscription: "/partner/subscription",
-// };
-
-// /* path -> tab */
-// const pathToTab = (path: string): PartnerTab => {
-//   if (path.startsWith("/partner/analytics")) return "analytics";
-//   if (path.startsWith("/partner/salary")) return "salary";
-//   if (path.startsWith("/partner/service")) return "service";
-//   if (path.startsWith("/partner/subscription")) return "subscription";
-//   return "dashboard";
-// };
-
-// export default function Partner() {
-//   const navigate = useNavigate();
-//   const { pathname } = useLocation();
-//   const [active, setActive] = useState<PartnerTab>(() => pathToTab(pathname));
-//   const [sidebarOpen, setSidebarOpen] = useState(false);
-//   const mainRef = useRef<HTMLDivElement | null>(null);
-
-//   useEffect(() => {
-//     setActive(pathToTab(pathname));
-//   }, [pathname]);
-
-//   useEffect(() => {
-//     mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-//   }, [active]);
-
-//   const setTab = (t: PartnerTab) => {
-//     setActive(t);
-//     navigate(TAB_TO_PATH[t]);
-//   };
-
-//   const pageTitle = useMemo(() => {
-//     switch (active) {
-//       case "dashboard":
-//         return "Dashboard";
-//       case "analytics":
-//         return "Analytics";
-//       case "salary":
-//         return "Salary & Payments";
-//       case "service":
-//         return "Service Access";
-//       case "subscription":
-//         return "Subscription";
-//       default:
-//         return "Partner";
-//     }
-//   }, [active]);
-
-//   return (
-//     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white">
-//       <PartnerSidebar
-//         active={active}
-//         setActive={setTab}
-//         sidebarOpen={sidebarOpen}
-//         setSidebarOpen={setSidebarOpen}
-//       />
-
-//       <div className="lg:ml-72">
-//         {/* Topbar */}
-//         <div className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/60 backdrop-blur">
-//           <div className="flex items-center px-4 sm:px-6 py-4">
-//             <button
-//               className="lg:hidden inline-flex items-center justify-center rounded-xl bg-white/10 border border-white/10 px-3 py-2 hover:bg-white/15"
-//               onClick={() => setSidebarOpen(true)}
-//               aria-label="Open sidebar"
-//             >
-//               <FaBars />
-//             </button>
-
-//             <div className="ml-3 leading-tight">
-//               <div className="text-lg font-extrabold">{pageTitle}</div>
-//               <div className="text-xs text-slate-300">Partner Panel • HireMe</div>
-//             </div>
-//           </div>
-//         </div>
-
-//         <main
-//           ref={mainRef}
-//           className={cn(
-//             "px-4 sm:px-6 py-6",
-//             "h-[calc(100vh-72px)] overflow-y-auto",
-//             "min-h-[calc(100vh-72px)]"
-//           )}
-//         >
-//           <Suspense
-//             fallback={
-//               <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-//                 <div className="h-5 w-48 bg-white/10 rounded mb-4 animate-pulse" />
-//                 <div className="h-4 w-full bg-white/10 rounded mb-2 animate-pulse" />
-//                 <div className="h-4 w-4/5 bg-white/10 rounded mb-2 animate-pulse" />
-//                 <div className="h-4 w-2/3 bg-white/10 rounded animate-pulse" />
-//               </div>
-//             }
-//           >
-//             {active === "dashboard" && <PartnerDashboard />}
-//             {active === "analytics" && <PartnerAnalytics />}
-//             {active === "salary" && <PartnerSalaryPayment />}
-//             {active === "service" && <PartnerServiceAccess />}
-//             {active === "subscription" && <PartnerSubscription />}
-//           </Suspense>
-//         </main>
-//       </div>
-//     </div>
-//   );
-// }
-
-
-
-
-
 import { useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import PartnerSidebar from "./PartnerSidebar";
 import { FaBars } from "react-icons/fa";
 
-export type PartnerTab =
-  | "dashboard"
-  | "analytics"
-  | "salary"
-  | "service"
-  | "subscription";
+export type PartnerTab = "dashboard" | "analytics" | "salary" | "service" | "subscription";
 
-const cn = (...a: Array<string | false | undefined | null>) =>
-  a.filter(Boolean).join(" ");
+const cn = (...a: Array<string | false | undefined | null>) => a.filter(Boolean).join(" ");
 
 /* ✅ Lazy loaded sections (must exist as default exports) */
 const PartnerDashboard = lazy(() => import("./PartnerDashboard"));
 const PartnerAnalytics = lazy(() => import("./PartnerAnalytics"));
 const PartnerSalaryPayment = lazy(() => import("./PartnerSalaryPayment"));
 const PartnerServiceAccess = lazy(() => import("./PartnerServiceAccess"));
-const PartnerSubscription = lazy(() => import("./PartnerSubscription"));
+ const PartnerSubscription = lazy(() => import("./PartnerSubscription"));
 
 /* tab -> path */
 const TAB_TO_PATH: Record<PartnerTab, string> = {
@@ -174,32 +35,20 @@ const pathToTab = (path: string): PartnerTab => {
 export default function Partner() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-
-  // ✅ keep real React state setter (prevents TS2322)
   const [active, setActive] = useState<PartnerTab>(() => pathToTab(pathname));
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const mainRef = useRef<HTMLDivElement | null>(null);
 
-  // ✅ sync active tab with url
   useEffect(() => {
     setActive(pathToTab(pathname));
   }, [pathname]);
 
-  // ✅ scroll top on tab change
   useEffect(() => {
     mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [active]);
 
-  // ✅ navigation helper (sidebar uses this)
-  const goTab = (t: PartnerTab) => {
-    // close sidebar on mobile
-    setSidebarOpen(false);
-
-    // update state so UI updates immediately
+  const setTab = (t: PartnerTab) => {
     setActive(t);
-
-    // navigate to correct route
     navigate(TAB_TO_PATH[t]);
   };
 
@@ -222,15 +71,11 @@ export default function Partner() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 text-white">
-      {/* ✅ IMPORTANT:
-          - setActive MUST be the real setActive (Dispatch<SetStateAction<PartnerTab>>)
-          - goTab handles navigation & click actions */}
       <PartnerSidebar
         active={active}
-        setActive={setActive}
+        setActive={setTab}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
-        onNavigate={goTab}
       />
 
       <div className="lg:ml-72">
@@ -247,9 +92,7 @@ export default function Partner() {
 
             <div className="ml-3 leading-tight">
               <div className="text-lg font-extrabold">{pageTitle}</div>
-              <div className="text-xs text-slate-300">
-                Partner Panel • HireMe
-              </div>
+              <div className="text-xs text-slate-300">Partner Panel • HireMe</div>
             </div>
           </div>
         </div>
@@ -283,3 +126,5 @@ export default function Partner() {
     </div>
   );
 }
+
+
